@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>後台</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+    <link rel="stylesheet" href="assets/style/all.css" />
+    <script src="https://unpkg.com/vue@next"></script>
+  </head>
+  <body>
+    <div id="app">
+      <loading :is-loading="isLoading" v-if="isLoading"></loading>
+      <div class="position-relative bg bg-login bg-cover bg-fixed min-vh-100 p-12">
+        <div class="position-absolute bg-primary w-100 h-100 opacity-5 top-0 start-0"></div>
+        <div class="position-relative d-flex justify-content-end mb-8">
+          <div class="btn btn-white btn-white-hover shadow px-8" @click="openModal('add')">新增產品</div>
+        </div>
+
+        <div class="bg-white position-relative">
+          <table class="table rounded-3 mb-0 table-borderless">
+            <thead class="bg-dark text-white">
+              <tr>
+                <th class="w-15">產品圖片</th>
+                <th class="">產品名稱</th>
+                <th>分類</th>
+                <th>原價</th>
+                <th>售價</th>
+                <th>是否上架</th>
+                <th>編輯 / 刪除</th>
+              </tr>
+            </thead>
+            <tbody id="productList">
+              <template v-for="(item,key) in products" :key="item.id">
+                <tr :class="{'table-light': item.is_enabled}">
+                  <td class="w-15">
+                    <img class="w-100" :src="item.imageUrl" />
+                  </td>
+                  <td>{{ item.title }}</td>
+                  <td>{{ item.category }}</td>
+                  <td>{{item.origin_price}}</td>
+                  <td>{{item.price}}</td>
+                  <td>
+                    <div class="form-check form-switch">
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :id='"enabled"+key'
+                        v-model="item.is_enabled"
+                        :true-value="1"
+                        :false-value="0"
+                        @change="changeStatus(item)"
+                      />
+
+                      <label v-if="item.is_enabled" class="form-check-label" :for='"enabled"+key'>上架</label>
+                      <label v-else class="form-check-label" :for='"enabled"+key'>未上架</label>
+                    </div>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-primary" @click="openModal('edit',item)">編輯</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary ms-2" @click="openModal('delete',item)">刪除</button>
+                    <button class="btn btn-outline-primary float-end p-0 lh-1 mt-2 me-4" @click="openCollapse(key)">
+                      <span class="material-icons text-lg align-bottom" :class="{'rotate': key == isOpen.id && isOpen.open}"> arrow_drop_down </span>
+                    </button>
+                  </td>
+                </tr>
+                <tr :class="{'table-light': item.is_enabled}">
+                  <td colspan="8" class="p-0 border-bottom">
+                    <div class="collapse p-8" :id='"collapseExample" + key'>
+                      <p class="text-sm text-info mb-3">產品單位 : {{item.unit}}</p>
+                      <p class="text-sm text-info mb-3">產品描述 : {{item.description}}</p>
+                      <p class="text-sm text-info mb-3">說明內容 : {{item.content}}</p>
+                      <p class="text-sm text-info mb-3">輪播圖片 :</p>
+                      <div class="d-flex flex-wrap">
+                        <img class="w-20 m-4" v-for="(img,i) in item.imagesUrl" :src="img" :key='"img" + i' />
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <div class="d-flex justify-content-between align-items-center py-4 px-6">
+            <p id="totalAmount">目前有 {{totalAmount}} 樣產品</p>
+            <pagination :pages="pagination" @emit-page="getData"></pagination>
+          </div>
+        </div>
+      </div>
+
+      <!-- modal-->
+      <product-modal-component
+        :temp-product="tempProduct"
+        :is-add="isAdd"
+        :is-uploads="isUploads"
+        :products-category="productsCategory"
+        :pages="pagination"
+        @emit-update="updateProduct"
+      ></product-modal-component>
+
+      <delete-modal :temp-product="tempProduct" :pages="pagination" @delete="getData"></delete-modal>
+    </div>
+    <script type="text/x-template" id="productModal">
+      <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-4">
+              <h5 v-if="isAdd" class="modal-title" id="exampleModalLabel">新增產品</h5>
+              <h5 v-else class="modal-title" id="exampleModalLabel">編輯產品</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-12 mb-6">
+                    <label for="productTitle" class="form-label">產品名稱</label>
+                    <input type="text" class="form-control" id="productTitle" placeholder="輸入產品標題" v-model.lazy.trim="tempProduct.title" />
+                  </div>
+                  <div class="col-6 mb-6">
+                    <label for="productOriginPrice" class="form-label">產品原價</label>
+                    <input type="number" class="form-control" id="productOriginPrice" min=0 placeholder="輸入產品原價" v-model.number="tempProduct.origin_price" />
+                  </div>
+                  <div class="col-6 mb-6">
+                    <label for="productPrice" class="form-label">產品售價</label>
+                    <input type="number" class="form-control" id="productPrice" min=0 placeholder="輸入產品售價" v-model.number="tempProduct.price" />
+                  </div>
+                </div>
+                <div class="row row-cols-2 align-items-end">
+                  <div class="col mb-6">
+                    <label class="form-label">產品分類</label>
+                    <select class="form-select" v-model="tempProduct.category">
+                      <option selected disabled>請選擇</option>
+                      <option v-for="category in productsCategory" :value="category" :key="category">{{category}}</option>
+                    </select>
+                  </div>
+                  <div class="col mb-6">
+                    <div v-if="isAddCategory" class="d-flex">
+                      <input type="text" v-model.trim="tempCategory" class="form-control" placeholder="新增分類" />
+                      <div class="btn btn-primary flex-shrink-0 ms-4" @click="addCategory">新增</div>
+                    </div>
+                    <div v-else class="btn btn-primary" @click=" this.isAddCategory = true">新增產品分類</div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6 mb-6">
+                    <label for="productUnit" class="form-label">產品單位</label>
+                    <input type="text" class="form-control" id="productUnit" placeholder="輸入產品單位" v-model.trim="tempProduct.unit" />
+                  </div>
+                  <div class="col-6 mb-6">
+                    <p class="mb-3">是否上架產品</p>
+                    <div class="form-check mt-2">
+                      <input class="form-check-input" type="checkbox" id="flexCheckDefault" v-model="tempProduct.is_enabled" :true-value="1" :false-value="0" />
+                      <label v-if="tempProduct.is_enabled" class="form-check-label" for="flexCheckDefault">上架</label>
+                      <label v-else class="form-check-label" for="flexCheckDefault">未上架</label>
+                    </div>
+                  </div>
+
+                  <div class="col-12 mb-6">
+                    <label for="productDescription" class="form-label">產品描述</label>
+                    <textarea
+                      type="text"
+                      rows="5"
+                      class="form-control"
+                      id="productDescription"
+                      placeholder="輸入產品描述"
+                      v-model="tempProduct.description"
+                    ></textarea>
+                  </div>
+                  <div class="col-12 mb-6">
+                    <label for="productContent" class="form-label">說明內容</label>
+                    <textarea type="text" rows="5" class="form-control" id="productContent" placeholder="輸入說明內容" v-model="tempProduct.content"></textarea>
+                  </div>
+                  <div class="col-12 mb-6">
+                    <p class="mb-3">主要圖片</p>
+                    <div class="row row-cols-2 align-items-center">
+                      <div class="col">
+                        <label for="productImage" class="form-label text-xs">圖片位址</label>
+                        <input type="text" class="form-control mb-2" id="productImage" placeholder="輸入圖片位址" v-model="tempProduct.imageUrl" />
+                        <p class="text-xs text-info mb-2">或</p>
+
+                        <button v-if="isUpload" class="btn btn-primary text-sm" type="button" disabled>
+                          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          上傳中...
+                        </button>
+                        <label v-else class="btn btn-secondary text-sm text-white">
+                          <input style="display: none" type="file" @change="uploadImage('main',$event)" />
+                          <span class="material-icons text-base align-text-bottom"> file_upload </span> 上傳圖片
+                        </label>
+                      </div>
+                      <div class="col">
+                        <img class="w-100 h-auto" :src="tempProduct.imageUrl" alt="" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 mb-6">
+                    <p class="mb-3">輪播圖片</p>
+                    <div class="row row-cols-3 align-items-end">
+                      <div v-for="(item,key) in tempProduct.imagesUrl" class="col mb-6" :key="key">
+                        <img class="w-100 h-auto" :src="tempProduct.imagesUrl[key]" alt="" />
+
+                        <label :for='"productImage" + key' class="form-label text-xs">圖片位址</label>
+                        <input
+                          type="text"
+                          class="form-control mb-2"
+                          :id='"productImage" + key'
+                          placeholder="輸入圖片位址"
+                          v-model="tempProduct.imagesUrl[key]"
+                        />
+                        <p class="text-xs text-info mb-2">或</p>
+                        <button v-if="isUploads[key]" class="d-block w-100 btn btn-primary text-sm mb-4" type="button" disabled>
+                          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          上傳中...
+                        </button>
+                        <label v-else class="d-block btn btn-secondary text-sm text-white mb-4">
+                          <input style="display: none" type="file" @change="uploadImage(key,$event)" />
+                          <span class="material-icons text-base align-text-bottom"> file_upload </span> 上傳圖片
+                        </label>
+
+                        <div v-if="tempProduct.imagesUrl[key]" class="btn btn-outline-primary text-xs" @click="deleteImage(key)">刪除圖片</div>
+                        <div v-else class="btn btn-outline-primary text-xs" @click="deleteImage(key)">取消</div>
+                      </div>
+                    </div>
+                    <div class="btn btn-primary text-sm" @click="createImage">新增輪播圖片</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal" >取消</button>
+              <button v-if="isAdd" type="button" class="btn btn-primary" @click="emitUpdate(tempProduct)">新增產品</button>
+              <button v-else type="button" class="btn btn-primary" @click="emitUpdate(tempProduct)">確定編輯</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script type="text/x-template" id="deleteModal">
+      <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-warning text-white py-4">
+              <h5 class="modal-title" id="exampleModalLabel">刪除產品</h5>
+
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>是否刪除<span class="text-warning">{{tempProduct.title}}</span>?</p>
+              <p class="text-sm text-info">(刪除後將無法恢復)</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-warning" data-bs-dismiss="modal">取消</button>
+              <button type="button" class="btn btn-warning text-white" @click="deleteProduct">確認刪除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+    <script type="text/x-template" id="loading">
+      <div  class="loading">
+        <span class="loader-11"> </span>
+      </div>
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.9.1/axios.min.js"
+      integrity="sha512-Xk3wWei2TGrsh9kDSBKUMIjw/86sLUvhtnv9f7fOuIwhhiUTKz8szkWkzHthrM5Bb3Bu9idSzkxOrkzhcneuiw=="
+      crossorigin="anonymous"
+    ></script>
+    <script src="assets/js/vendors.js"></script>
+    <script src="assets/js/main.js" type="module"></script>
+  </body>
+</html>
