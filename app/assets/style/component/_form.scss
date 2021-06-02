@@ -1,0 +1,45 @@
+
+.form-floating {
+    label{
+        color:#fff;
+    }
+}
+.form-control,.form-select{
+    border: 1px solid $secondary;
+    font-size: 14px;
+   
+    color:$info;
+    &:focus{
+        background-color: rgba($secondary,0.3);
+        box-shadow: inset 0 0 5px rgba($primary,0.3);
+    }
+}
+.form-downline{
+    background: transparent;
+    color:#fff;
+    border: 0;
+    border-bottom: 1px solid #fff;
+    border-radius: 0;
+    &:focus{
+        background:transparent;
+        box-shadow: none;
+        color:#fff;
+
+    }
+}
+.form-switch .form-check-input{
+    background-repeat: no-repeat;
+    &::after{
+        display: none;
+    }
+    &:checked{
+        background-repeat: no-repeat;
+    }
+}
+
+.form-check-input:focus{
+    box-shadow: none;
+}
+
+
+

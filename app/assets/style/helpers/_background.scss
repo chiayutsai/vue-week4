@@ -1,0 +1,17 @@
+.bg{
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+.bg-cover{
+    background-size: cover;
+}
+
+.bg-login{
+    background-image: url(../images/login-bg.jpeg);
+}
+.opacity-5{
+    opacity: 0.5;
+}
+.bg-fixed{
+    background-attachment: fixed;
+}

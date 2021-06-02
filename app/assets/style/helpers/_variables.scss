@@ -1,0 +1,65 @@
+
+
+/*color*/
+$primary :#516E41;
+$secondary:#8da97d;
+$info:#535353;
+$dark: rgba(0,0,0,0.7);
+$light:rgba(#e9f1e4,0.4);
+$warning:#c3774b;
+$theme-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "info":       $info,
+  "light":      $light,
+  "dark":       $dark,
+  "white":      #fff,
+  "black" : #121212,
+  "warning": $warning,
+);
+
+
+/*spacer */
+$spacer: 1rem ;
+$spacers: (
+  0:0,
+  1:($spacer * 0.25),
+  2: ($spacer * .375),
+  3: ($spacer * 0.5),
+  4: ($spacer * .75),
+  5: $spacer,
+  6:($spacer * 1.25),
+  7: ($spacer * 1.5),
+  8: ($spacer * 1.75),
+  9: ($spacer * 2),
+  10: ($spacer * 2.25),
+  11: ($spacer * 2.5),
+  12: ($spacer * 3.25),
+  13: ($spacer * 3.75),
+  15: ($spacer * 5),
+  16: ($spacer * 6.625),
+  17: ($spacer * 7),
+);
+$font-size-base: 1rem;
+
+$font-size: () !default;
+$font-size: map-merge(
+  (
+    'xs': ($font-size-base *0.75),
+    'sm': ($font-size-base *0.875),
+    'base': $font-size-base,
+    'lg': ($font-size-base * 1.125),
+    'xl' :($font-size-base * 1.25),
+    '2xl': ($font-size-base * 1.5),
+    '3xl': ($font-size-base * 1.75),
+    '4xl': ($font-size-base * 2.25),
+    
+  ),
+  $font-size
+);
+
+
+$pagination-active-bg:$secondary;
+$pagination-disabled-color: rgba($info,0.2);
+$pagination-disabled-bg:  rgba(#eee,0.5);
+$pagination-focus-box-shadow: none;

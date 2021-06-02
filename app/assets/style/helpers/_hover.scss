@@ -1,0 +1,13 @@
+.btn-white-hover{
+  &:hover{
+    background-color: $secondary;
+    border-color: transparent;
+    box-shadow: inset 0px 0px 5px rgba($primary,0.8) !important;
+    color:#fff; 
+  }
+}
+
+.rotate{
+  transition: all 0.5s;
+  transform: rotate(180deg);
+}
